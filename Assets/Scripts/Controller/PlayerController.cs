@@ -1,27 +1,26 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Animations;
 
 public class PlayerController : MonoBehaviour
 {
     private Animator animator;
     private Rigidbody rb;
 
-    //鼠标灵敏度
-    public float xSensitivity ;
-    public float ySensitivity ;
+    [Header("鼠标灵敏度")]
+    public float xSensitivity;
+    public float ySensitivity;
 
-    //人物移动速度
-    public float speed ;
+    [Header("移动速度")]
+    public float walkSpeed;
+    public float runSpeed;
 
-    //跳跃力
+    [Header("跳跃力量")]
     public float jumpForce;
 
-    private Vector3 volocity ;
+    [Header("加速度减速度")]
+    public float accel;
+    public float deaccel;
+
+    private Vector3 volocity;
     private float xRotation = 0f;
     private bool isRunning = false;
     private bool isJumping = false;
@@ -33,14 +32,16 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
 
         //隐藏鼠标
-        Cursor.lockState = CursorLockMode.Locked;   
+        Cursor.lockState = CursorLockMode.Locked;
+
+        rb.drag = 0;
     }
 
     private void Update()
     {
         Mouse();
         Run();
-        Move();
+        MoveInput();
         Jump();
         Aim();
 
@@ -50,76 +51,90 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        Move();
         if (isJumping)
         {
             isJumping = false;
-            volocity.y = jumpForce;
+            rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
         }
-        rb.velocity = volocity;
 
     }
 
     //瞄准
     private void Aim()
     {
-        if(Input.GetMouseButtonDown(1)) isAiming =!isAiming;
+        if (Input.GetMouseButtonDown(1)) isAiming = !isAiming;
 
         //判断是否在瞄准状态，进行动画过渡
-        float target =isAiming ? 1 : 0;
+        float target = isAiming ? 1 : 0;
 
 
         float aim = animator.GetFloat("Aiming");
-        bool isShake=target==1?true:false;
+        bool isShake = target == 1 ? true : false;
 
         //为瞄准增添抖动效果，更具手感
         animator.SetBool("Aim", isShake);
 
         animator.SetFloat("Aiming", Mathf.Lerp(aim, target, 10 * Time.deltaTime));
-    }   
+    }
 
     //跑步
     private void Run()
     {
         if (Input.GetKeyDown(KeyCode.LeftShift))
         {
-            if(!isRunning)
-            {
-                speed =6;
-                isRunning = true;
-                animator.SetBool("Holstered", true);
-            }
-            else
-            {
-                speed = 4;
-                isRunning = false;
-                animator.SetBool("Holstered", false);   
-            }
+            isRunning = !isRunning;
+            animator.SetBool("Holstered", isRunning);
         }
-       
+
     }
 
-    //人物移动
+    //获取人物移动输入
+    private void MoveInput()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+
+        volocity = new Vector3(horizontal, 0, vertical).normalized;
+
+    }
+
+    //平滑处理人物移动
     private void Move()
     {
-        float horizontal= Input.GetAxis("Horizontal");
-        float vertical= Input.GetAxis("Vertical");
+        //记录人物当前垂直速度，保持跳跃状态不受水平移动影响
+        float yVel = rb.velocity.y;
 
-        Vector3 dir=(vertical*transform.forward + horizontal*transform.right).normalized;
-        volocity = dir * speed;
-        volocity.y = rb.velocity.y;
+        //获取人物当前速度
+        Vector3 flatvel =new Vector3(rb.velocity.x, 0, rb.velocity.z);
+        //获取人物目标速度
+        float targetSpeed = isRunning ? runSpeed : walkSpeed;
+        Vector3 targetVel = transform.TransformDirection(volocity) * targetSpeed;
 
-        //激活跑步动作
-        animator.SetFloat("Movement", dir.magnitude);
+        if(volocity.magnitude > 0.1f)
+        {
+            rb.velocity = Vector3.Lerp(flatvel, targetVel, accel * Time.deltaTime);
+        }
+        else
+        {
+            rb.velocity = Vector3.Lerp(flatvel, Vector3.zero, deaccel * Time.deltaTime);
+        }
+
+        //还原垂直速度
+        rb.velocity = new Vector3(rb.velocity.x, yVel, rb.velocity.z);
+
+        animator.SetFloat("Movement", volocity.magnitude);
     }
+
 
     //鼠标视角控制
     private void Mouse()
     {
-        float x= Input.GetAxis("Mouse X");
-        float y= Input.GetAxis("Mouse Y");
+        float x = Input.GetAxis("Mouse X");
+        float y = Input.GetAxis("Mouse Y");
 
         //进行上下旋转
-        xRotation -= y * ySensitivity ;
+        xRotation -= y * ySensitivity;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
         animator.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 
@@ -128,7 +143,7 @@ public class PlayerController : MonoBehaviour
     }
 
     //判断是否在地面上
-    private bool IsGrounded()=> Physics.Raycast(transform.position+Vector3.up*.2f, Vector3.down, 0.3f, LayerMask.GetMask("Ground"));
+    private bool IsGrounded() => Physics.Raycast(transform.position + Vector3.up * .2f, Vector3.down, 0.3f, LayerMask.GetMask("Ground"));
 
     //跳跃
     private void Jump()
