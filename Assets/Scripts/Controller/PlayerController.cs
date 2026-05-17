@@ -22,7 +22,7 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 volocity;
     private float xRotation = 0f;
-    private bool isRunning = false;
+    public bool isRunning = false;
     private bool isJumping = false;
     private bool isAiming = false;
 

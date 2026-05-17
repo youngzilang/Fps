@@ -22055,8 +22055,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   xSensitivity: 2
   ySensitivity: 2
-  speed: 4
-  jumpForce: 5
+  walkSpeed: 4
+  runSpeed: 6
+  jumpForce: 4
+  accel: 15
+  deaccel: 999
 --- !u!4 &8606111287714449
 Transform:
   m_ObjectHideFlags: 0

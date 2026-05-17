@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EnemyStateMachine 
 {
-    private EnemyState currentState;
+    public EnemyState currentState;
 
     public void Initialized(EnemyState enemyState)
     {

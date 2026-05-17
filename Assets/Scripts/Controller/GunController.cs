@@ -23,7 +23,7 @@ public class GunController : MonoBehaviour
     private void Update()
     {
         timer+= Time.deltaTime;
-        if(Input.GetMouseButton(0) && timer >= fireRate)
+        if(Input.GetMouseButton(0) && timer >= fireRate&&!player.isRunning)
         {
             Instantiate(bulletPrefab, firePoint.position, firePoint.rotation); //ÊµÀý»¯×Óµ¯
 
