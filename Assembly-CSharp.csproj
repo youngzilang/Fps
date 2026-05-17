@@ -61,11 +61,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\CSAssets2026\model\Head.cs" />
-    <Compile Include="Assets\Scripts\GunController.cs" />
-    <Compile Include="Assets\Scripts\BulletController.cs" />
-    <Compile Include="Assets\Scripts\EnemyController.cs" />
-    <Compile Include="Assets\Scripts\ForceController.cs" />
-    <Compile Include="Assets\Scripts\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\Controller\EnemyController.cs" />
+    <Compile Include="Assets\Scripts\Controller\BulletController.cs" />
+    <Compile Include="Assets\Scripts\Enemy\EnemyState.cs" />
+    <Compile Include="Assets\Scripts\Controller\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\Controller\GunController.cs" />
+    <Compile Include="Assets\Scripts\Enemy\EnemyStateMachine.cs" />
+    <Compile Include="Assets\Scripts\Controller\ForceController.cs" />
+    <Compile Include="Assets\Scripts\Enemy\Spider\SpiderIdleState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\CSAssets2026\Infima Games\Low Poly Shooter Pack - Free Sample\Art\TextMesh Pro\Resources\Shaders\TMPro.cginc" />
