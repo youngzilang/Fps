@@ -19,13 +19,6 @@ public class BulletPool : MonoBehaviour
         }
         Instance = this;
 
-        // Ô¤´´½¨
-        for (int i = 0; i < initialSize; i++)
-        {
-            var go = Instantiate(bulletPrefab, transform);
-            go.SetActive(false);
-            pool.Enqueue(go);
-        }
     }
 
     public GameObject Spawn(Vector3 position, Quaternion rotation)
@@ -53,5 +46,17 @@ public class BulletPool : MonoBehaviour
         go.SetActive(false);
         go.transform.SetParent(transform);
         pool.Enqueue(go);
+    }
+
+    public void preWarm(GameObject prefab, int count)
+    {
+        if(prefab == null || count <= 0) return;
+
+        for (int i = 0; i < count; i++)
+        {
+            var go = Instantiate(prefab, transform);
+            go.SetActive(false);
+            pool.Enqueue(go);
+        }
     }
 }

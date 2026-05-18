@@ -6,6 +6,7 @@ public class BulletController : MonoBehaviour
 {
     private Rigidbody rb;
     private BulletPool bulletPool;
+    private EffectPool effectPool;
 
     //子弹击中目标的特效预制体
     public GameObject hitEffectPrefab;
@@ -19,6 +20,7 @@ public class BulletController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         bulletPool=BulletPool.Instance;
+        effectPool=EffectPool.Instance;
         //给子弹一个初始力，使其向前飞行
         rb.velocity = Vector3.zero;
         rb.AddForce(transform.forward * speed, ForceMode.Impulse);
@@ -30,8 +32,8 @@ public class BulletController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        //实例化子弹击中目标的特效,让特效朝向碰撞点的法线方向
-        GameObject hitEffect = Instantiate(hitEffectPrefab, transform.position, Quaternion.LookRotation(collision.contacts[0].normal));
+        //从对象池中获取子弹击中目标的特效,让特效朝向碰撞点的法线方向
+        GameObject hitEffect = effectPool.Spawn(hitEffectPrefab, transform.position, Quaternion.LookRotation(collision.contacts[0].normal));
 
         if(collision.gameObject.CompareTag("Enemy"))
         {
@@ -47,8 +49,6 @@ public class BulletController : MonoBehaviour
 
         //把子弹返回对象池而不是销毁
         ReturnBullet();
-
-        Destroy(hitEffect,1f);//销毁特效
     }
 
     private void OnDisable()

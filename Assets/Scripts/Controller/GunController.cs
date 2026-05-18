@@ -9,6 +9,7 @@ public class GunController : MonoBehaviour
     public GameObject firePrefab;//开火特效预制体
 
     private BulletPool bulletPool;//子弹对象池
+    private EffectPool effectPool;//特效对象池
 
     private PlayerController player;
     private ForceController forceController;
@@ -21,6 +22,7 @@ public class GunController : MonoBehaviour
         player = GetComponent<PlayerController>();
         forceController = GetComponent<ForceController>();
         bulletPool=BulletPool.Instance; //获取子弹对象池实例
+        effectPool=EffectPool.Instance; //获取特效对象池实例
     }
 
     private void Update()
@@ -34,9 +36,9 @@ public class GunController : MonoBehaviour
 
             forceController.Fire(); //增加后坐力
 
-            Destroy(Instantiate(firePrefab, firePoint.position, firePoint.rotation), .1f); //0.1秒后销毁开火特效
+            effectPool.Spawn(firePrefab, firePoint.position, firePoint.rotation,.1f); //从对象池中获取开火特效实例
+
             timer = 0f; //重置计时器
         }
     }
 }
- 
