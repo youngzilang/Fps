@@ -38,6 +38,8 @@ public class GunController : MonoBehaviour
 
             effectPool.Spawn(firePrefab, firePoint.position, firePoint.rotation,.1f); //从对象池中获取开火特效实例
 
+            AudioManager.instance.PlaySFX(0); //播放开火音效
+
             timer = 0f; //重置计时器
         }
     }

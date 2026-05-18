@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -26,6 +27,17 @@ public class PlayerController : MonoBehaviour
     private bool isJumping = false;
     private bool isAiming = false;
 
+    private Vector3 lastFlatPosition;
+    private float accumulatedDistance;
+
+    [Header("脚步声音")]
+    public float walkStepDistance;
+    public float runStepDistancef;
+    private int currentFootstepSourceIndex=1;
+    // 记录脚步是否正在播放
+    private bool footstepPlaying = false;
+    private float stepCD;
+
     void Start()
     {
         animator = GetComponentInChildren<Animator>();
@@ -35,6 +47,8 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
 
         rb.drag = 0;
+
+        lastFlatPosition = new Vector3(transform.position.x, 0, transform.position.z);
     }
 
     private void Update()
@@ -124,6 +138,66 @@ public class PlayerController : MonoBehaviour
         rb.velocity = new Vector3(rb.velocity.x, yVel, rb.velocity.z);
 
         animator.SetFloat("Movement", volocity.magnitude);
+
+        FootStepLogic();
+    }
+
+    private void FootStepLogic()
+    {
+        //冷却时间，防止连续爆音
+        if (stepCD > 0)
+        {
+            stepCD -= Time.deltaTime;
+            return;
+        }
+        //只有地面 + 有输入 + 速度够快才走步
+        if (!IsGrounded() || volocity.magnitude < 0.1f||rb.velocity.magnitude < 0.1f)
+        {
+            accumulatedDistance = 0;
+            // 停止正在播放的脚步声
+            if (footstepPlaying && currentFootstepSourceIndex >= 0)
+            {
+                AudioManager.instance?.StopSFX(currentFootstepSourceIndex);
+                footstepPlaying = false;
+                currentFootstepSourceIndex = -1;
+            }
+            return;
+        }
+
+        // 计算移动距离
+        Vector3 currentFlatPos = new Vector3(transform.position.x, 0, transform.position.z);
+        float delta = Vector3.Distance(currentFlatPos, lastFlatPosition);
+
+        if(delta < 0.001f) return; // 移动距离太小，忽略
+
+        accumulatedDistance += delta;
+        lastFlatPosition = currentFlatPos;
+
+        // 走/跑 阈值
+        float stepThreshold = isRunning ? runStepDistancef : walkStepDistance;
+
+        if (accumulatedDistance >= stepThreshold)
+        {
+            if (footstepPlaying && currentFootstepSourceIndex >= 0)
+            {
+                AudioManager.instance?.StopSFX(currentFootstepSourceIndex);
+                footstepPlaying = false;
+            }
+
+            // 播放声音
+            int idx = isRunning ? 2 : 1;
+            currentFootstepSourceIndex = idx;
+
+            AudioManager.instance?.PlaySFX(idx);
+            footstepPlaying = true;
+
+            // 重置距离
+            accumulatedDistance = 0;
+
+            // 冷却：0.1秒内不重复触发
+            stepCD = 0.1f;
+
+        }
     }
 
 
