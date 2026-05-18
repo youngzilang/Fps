@@ -5,6 +5,7 @@ using UnityEngine;
 public class BulletController : MonoBehaviour
 {
     private Rigidbody rb;
+    private BulletPool bulletPool;
 
     //子弹击中目标的特效预制体
     public GameObject hitEffectPrefab;
@@ -14,13 +15,17 @@ public class BulletController : MonoBehaviour
 
 
     // Start is called before the first frame update
-    void Start()
+    void OnEnable()
     {
         rb = GetComponent<Rigidbody>();
+        bulletPool=BulletPool.Instance;
         //给子弹一个初始力，使其向前飞行
+        rb.velocity = Vector3.zero;
         rb.AddForce(transform.forward * speed, ForceMode.Impulse);
 
-        Destroy(gameObject, 1f); //1秒后销毁子弹，防止无限存在占用资源
+       // Destroy(gameObject, 1f); //1秒后销毁子弹，防止无限存在占用资源
+
+        Invoke(nameof(ReturnBullet), 1f); //1秒后把子弹返回对象池
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -38,8 +43,27 @@ public class BulletController : MonoBehaviour
             }
         }
 
-        Destroy(gameObject); //销毁子弹
+        // Destroy(gameObject); //销毁子弹
+
+        //把子弹返回对象池而不是销毁
+        ReturnBullet();
+
         Destroy(hitEffect,1f);//销毁特效
+    }
+
+    private void OnDisable()
+    {
+        if (rb)
+        {
+            rb.velocity = Vector3.zero; //重置速度，防止下次启用时受到之前的速度影响
+            rb.angularVelocity = Vector3.zero; //重置旋转速度
+        }
+    }
+
+    private void ReturnBullet()
+    {
+        CancelInvoke(); // 防止重复调用
+        bulletPool.ReturnToPool(gameObject);
     }
 }
     
