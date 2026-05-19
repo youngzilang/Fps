@@ -6,3 +6,5 @@
 
 ·基于 NavMesh 实现敌人寻路追击
 
+·简单的FSM状态机实现怪物的3种基本状态切换（Idle，Move，Attack）
+
