@@ -8,12 +8,13 @@ public class Spider : Enemy
     public SpiderWalkState walkState;
     public SpiderAttackState attackState;
 
+
     protected override void Awake()
     {
          base.Awake();
-         idleState = new SpiderIdleState(this, stateMachine, "Idle");
-         walkState = new SpiderWalkState(this, stateMachine, "Walk");  
-         attackState = new SpiderAttackState(this, stateMachine, "Attack");  
+         idleState = new SpiderIdleState(this, stateMachine, "Idle",this);
+         walkState = new SpiderWalkState(this, stateMachine, "Walk",this);  
+         attackState = new SpiderAttackState(this, stateMachine, "Attack",this);  
     }
 
     protected override void Start()

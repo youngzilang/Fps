@@ -15,17 +15,17 @@ public class EnemyState
         aniName = _aniName;
     }
 
-    public void Enter()
+    public virtual void Enter()
     {
         enemy.animator.SetBool(aniName, true);
     }
 
-    public void Update()
+    public virtual void Update()
     {
 
     }
 
-    public void Exit()
+    public virtual void Exit()
     {
         enemy.animator.SetBool(aniName, false);
     }

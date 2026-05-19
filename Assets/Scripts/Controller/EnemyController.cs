@@ -20,8 +20,12 @@ public class EnemyController : MonoBehaviour
     {
         if (deadEffect != null)
         {
-            Instantiate(deadEffect, transform.position, transform.rotation);
+            GameObject effect = Instantiate(deadEffect, transform.position, transform.rotation);
+            Destroy(effect, 1f); //1秒后销毁死亡特效对象，确保特效播放完毕
         }
+        AudioManager.instance.PlaySFX(3); //播放敌人死亡音效
+        //销毁敌人对象
         Destroy(gameObject);
+        
     }   
 }
