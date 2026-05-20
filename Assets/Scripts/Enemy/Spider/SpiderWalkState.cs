@@ -23,6 +23,8 @@ public class SpiderWalkState : EnemyState
 
     public override void Update()
     {
+        if (spider.agent == null || !spider.agent.isOnNavMesh || !spider.agent.enabled) return;
+
         //如果玩家进入攻击范围，切换到攻击状态
         if (spider.IsPlayerInAttackRange())
         {

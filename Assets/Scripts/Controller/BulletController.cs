@@ -38,10 +38,21 @@ public class BulletController : MonoBehaviour
         if(collision.gameObject.CompareTag("Enemy"))
         {
             //如果碰撞到敌人，调用敌人的受伤方法
-            EnemyController enemy = collision.gameObject.GetComponent<EnemyController>();
+            EnemyController enemyControl = collision.gameObject.GetComponent<EnemyController>();
+            if (enemyControl != null)
+            {
+                enemyControl.BeHurt(10); //假设子弹造成10点伤害
+            }
+
+            //计算击退力的方向和大小
+            Vector3 knockDir=transform.forward; //击退方向与子弹飞行方向相同
+            float knockStrength=15f; //击退力的大小，可以根据需要调整
+            Vector3 knockForce=knockDir* knockStrength; //最终的击退力向量
+
+            var enemy=collision.gameObject.GetComponent<Enemy>();
             if (enemy != null)
             {
-                enemy.BeHurt(10); //假设子弹造成10点伤害
+                enemy.ApplyKnockback(knockForce, 0.4f); //假设击退持续0.4秒
             }
         }
 

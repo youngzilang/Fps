@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -17,16 +18,25 @@ public class Enemy : MonoBehaviour
 
     public Transform target;
 
+    private Rigidbody rb;
+    private Coroutine knockbackCoroutine;
+
+    private Spider spider;
+
     protected virtual void Awake()
     {
          animator = GetComponent<Animator>();
          stateMachine = new EnemyStateMachine(); 
+         spider = GetComponent<Spider>();
 
-         agent = GetComponent<NavMeshAgent>();
+        agent = GetComponent<NavMeshAgent>();
 
         // 允许 NavMeshAgent 控制旋转/位置
         agent.updatePosition = true;
          agent.updateRotation = true;
+
+        rb = GetComponent<Rigidbody>();
+
     }
 
     protected virtual void Start()
@@ -43,7 +53,7 @@ public class Enemy : MonoBehaviour
     // 设置目的地并调整速度
     public void SetDestination(Vector3 destination,float speed)
     {
-       if(agent&& agent.isOnNavMesh)
+       if(agent&& agent.isOnNavMesh&&agent.enabled)
        {
            agent.isStopped = false;
               agent.speed = speed;
@@ -78,7 +88,98 @@ public class Enemy : MonoBehaviour
         return distance <= attackRange;
     }
 
-     private void OnDrawGizmosSelected()
+    public void ApplyKnockback(Vector3 force, float duration = 0.4f)
+    {
+        if (knockbackCoroutine != null)
+            StopCoroutine(knockbackCoroutine);
+
+        knockbackCoroutine = StartCoroutine(KnockbackRoutine(force, duration));
+    }
+
+    private IEnumerator KnockbackRoutine(Vector3 force, float duration)
+    {
+        // 禁用 agent（停止寻路）
+        bool hadAgent = (agent != null && agent.isOnNavMesh && agent.enabled);
+        bool originalIsKinematic = rb.isKinematic; // 保存原来的IsKinematic状态
+
+        if (hadAgent)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+            agent.enabled = false;
+        }
+
+        // 切换刚体为受物理控制
+        rb.isKinematic = false;
+
+        // 清理之前速度，施加冲量
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.AddForce(force, ForceMode.Impulse);
+
+        // 等待物理击退时间
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        // 停止刚体运动并恢复 kinematic
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = originalIsKinematic;
+
+
+        //启用agent
+        agent.enabled = true;
+
+        // 把 NavMeshAgent 同步到当前物理位置并恢复
+        if (hadAgent)
+        {
+            // 确保 agent 能够在 NavMesh 上
+            if (!agent.isOnNavMesh)
+            {
+                NavMeshHit hit;
+                // 在小半径内寻找最近的 NavMesh 点
+                NavMesh.SamplePosition(transform.position, out hit, 2.0f, NavMesh.AllAreas);
+               agent.Warp(hit.position);
+            }
+            else agent.Warp(transform.position);// agent 在 NavMesh 上，直接同步位置
+
+            agent.ResetPath();
+            agent.isStopped = false;
+
+        }
+
+        // 恢复完 agent 后，确保状态机回到合适的寻路/攻击状态
+        if (spider != null)
+        {
+            if (IsPlayerInDetectionRange())
+            {
+                if (IsPlayerInAttackRange())
+                {
+                    // 进入攻击态
+                    stateMachine.ChangeState(spider.attackState);
+                }
+                else
+                {
+                    // 进入追击态
+                    stateMachine.ChangeState(spider.walkState);
+                }
+            }
+            else
+            {
+                // 回 idle
+                stateMachine.ChangeState(spider.idleState);
+            }
+        }
+
+
+        knockbackCoroutine = null;
+    }
+
+    private void OnDrawGizmosSelected()
     {
         // 绘制检测范围
         Gizmos.color = Color.yellow;
